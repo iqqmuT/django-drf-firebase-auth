@@ -10,6 +10,9 @@ from rest_framework.authentication import (
     get_authorization_header,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 
 def get_setting(param, default_val):
@@ -93,4 +96,5 @@ class FirebaseAuthentication(BaseAuthentication):
         return User.objects.get(email=payload['email'])
 
     def get_or_create_user(self, payload):
+        logger.debug(f'get_or_create {payload}')
         return User.objects.get_or_create(email=payload['email'])
