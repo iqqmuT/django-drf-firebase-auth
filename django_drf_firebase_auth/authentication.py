@@ -69,7 +69,7 @@ class FirebaseAuthentication(BaseAuthentication):
 
         try:
             if get_setting('CREATE_NEW_USERS', False):
-                user, _ = self.get_or_create_user(payload)
+                user, created = self.get_or_create_user(payload)
             else:
                 user = self.get_user(payload)
         except User.DoesNotExist:
