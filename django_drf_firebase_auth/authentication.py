@@ -1,5 +1,6 @@
 """Firebase authentication for Django Rest Framework."""
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from firebase_admin import auth
@@ -10,6 +11,10 @@ from rest_framework.authentication import (
 )
 
 User = get_user_model()
+
+def get_setting(param, default_val):
+    firebase_auth = getattr(settings, 'FIREBASE_AUTH', {})
+    return firebase_auth.get(param, default_val)
 
 class FirebaseAuthentication(BaseAuthentication):
     """
@@ -58,12 +63,15 @@ class FirebaseAuthentication(BaseAuthentication):
 
         if not payload['email_verified']:
             raise exceptions.AuthenticationFailed({
-                'detail': _("User email not verified."),
+                'detail': _('User email not verified.'),
                 'error': 'email-not-verified',
             })
 
         try:
-            user = self.get_user(payload)
+            if get_setting('CREATE_NEW_USERS', False):
+                user, _ = self.get_or_create_user(payload)
+            else:
+                user = self.get_user(payload)
         except User.DoesNotExist:
             # user authenticated successfully but user record is missing from Django
             raise exceptions.AuthenticationFailed({
@@ -83,3 +91,6 @@ class FirebaseAuthentication(BaseAuthentication):
 
     def get_user(self, payload):
         return User.objects.get(email=payload['email'])
+
+    def get_or_create_user(self, payload):
+        return User.objects.get_or_create(email=payload['email'])
