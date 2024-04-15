@@ -97,4 +97,7 @@ class FirebaseAuthentication(BaseAuthentication):
 
     def get_or_create_user(self, payload):
         logger.debug(f'get_or_create {payload}')
-        return User.objects.get_or_create(email=payload['email'])
+        defaults = {}
+        if 'name' in payload:
+            defaults['first_name'] = payload['name']
+        return User.objects.get_or_create(email=payload['email'], defaults=defaults)
